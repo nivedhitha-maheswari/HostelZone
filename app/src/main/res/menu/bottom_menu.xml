@@ -1,0 +1,16 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/bottom_home"
+        android:title="Home"
+        android:icon="@drawable/home_white"/>
+
+    <item
+        android:id="@+id/bottom_greivances"
+        android:title="Greivances"
+        android:icon="@drawable/nav_icon2_launcher_foreground" />
+
+    <item
+        android:id="@+id/bottom_labpermission"
+        android:title="Lab Permission"
+        android:icon="@drawable/nav_lap1_launcher_foreground"/>
+</menu>

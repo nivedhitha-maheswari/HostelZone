@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="user_types">
+        <item>Inmate</item>
+        <item>Tutor</item>
+    </string-array>
+
+        <string-array name="year_options">
+            <item>1</item>
+            <item>2</item>
+            <item>3</item>
+            <item>4</item>
+            <item>5</item>
+        </string-array>
+    <string-array name="groups">
+        <item>G1</item>
+        <item>G2</item>
+    </string-array>
+
+    <string-array name="block_options">
+        <item>K</item>
+        <item>L</item>
+        <item>M</item>
+        <item>N</item>
+        <item>Q</item>
+    </string-array>
+
+    <string-array name="class_options">
+        <item>MCA</item>
+        <item>Mechanical</item>
+        <item>Civil</item>
+        <item>IT</item>
+        <item>CS</item>
+        <item>Production</item>
+    </string-array>
+
+
+</resources>

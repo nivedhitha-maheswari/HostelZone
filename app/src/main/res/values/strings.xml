@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">HostelZone</string>
+    <string name="select_user_type">Select User Type</string>
+    <string name="title_activity_warden_sign_up">WardenSignUpActivity</string>
+    <string name="user_info_format">Name: %1$s\nRoll Number: %2$s\nBlock: %3$s\nRoom Number: %4$s\nCourse: %5$s\nYear: %6$s</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_dashboard">Title Home</string>
+    <string name="title_home">Title Home</string>
+    <string name="title_notifications">Title Notification</string>
+    <string name="title_activity_nav">nav</string>
+
+
+</resources>

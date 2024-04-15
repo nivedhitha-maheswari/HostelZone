@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "717176220393",
+    "firebase_url": "https://hostelzone-1ce77-default-rtdb.firebaseio.com",
+    "project_id": "hostelzone-1ce77",
+    "storage_bucket": "hostelzone-1ce77.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717176220393:android:dbfaad1f284a1d0bc75e78",
+        "android_client_info": {
+          "package_name": "com.example.hostelzone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDC6hZAevLTBv_Y3Hx7KbCPmUJPrO61cqw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
