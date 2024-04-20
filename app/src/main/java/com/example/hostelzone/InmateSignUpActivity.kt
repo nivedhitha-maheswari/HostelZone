@@ -11,7 +11,8 @@ import com.example.hostelzone.databinding.ActivityInmateSignUpBinding
 import com.google.firebase.database.*
 import java.io.ByteArrayOutputStream
 import android.widget.ImageView
-import android.util.Base64
+import com.google.firebase.storage.FirebaseStorage
+import java.util.UUID
 
 class InmateSignUpActivity : AppCompatActivity() {
 
@@ -79,75 +80,104 @@ class InmateSignUpActivity : AppCompatActivity() {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
             val imageData = baos.toByteArray()
 
-            val base64Image = Base64.encodeToString(imageData, Base64.DEFAULT)
+            // Firebase Storage reference
+            val storageRef = FirebaseStorage.getInstance().reference.child("images/${UUID.randomUUID()}.jpg")
 
-            // Construct additionalData map with image and other fields
-            val additionalData = mapOf(
-                "inmateName" to binding.editTextInmateName.text.toString(),
-                "rollNumber" to binding.editTextRollNumber.text.toString(),
-                "course" to binding.spinnerClass.selectedItem.toString(),
-                "year" to binding.spinnerYear.selectedItem.toString(),
-                "group" to binding.groupSpinner.selectedItem.toString(),
-                "block" to binding.spinnerBlock.selectedItem.toString(),
-                "roomNumber" to binding.editTextRoomNumber.text.toString(),
-                "mobileNumber" to binding.editTextMobileNumber.text.toString(),
-                "image" to base64Image // Add the image to the additionalData map
-            )
+            // Upload image to Firebase Storage
+            storageRef.putBytes(imageData)
+                .addOnSuccessListener { taskSnapshot ->
+                    // Image uploaded successfully, get download URL
+                    storageRef.downloadUrl.addOnSuccessListener { uri ->
+                        val imageUrl = uri.toString()
 
-            // Get the username passed from SignUpActivity
-            val username = intent.getStringExtra("username")
+                        // Construct additionalData map with image URL and other fields
+                        val additionalData = mapOf(
+                            "inmateName" to binding.editTextInmateName.text.toString(),
+                            "rollNumber" to binding.editTextRollNumber.text.toString(),
+                            "course" to binding.spinnerClass.selectedItem.toString(),
+                            "year" to binding.spinnerYear.selectedItem.toString(),
+                            "group" to binding.groupSpinner.selectedItem.toString(),
+                            "block" to binding.spinnerBlock.selectedItem.toString(),
+                            "roomNumber" to binding.editTextRoomNumber.text.toString(),
+                            "mobileNumber" to binding.editTextMobileNumber.text.toString(),
+                            "image" to imageUrl // Store image URL
+                        )
 
-            // Query the database to find the user ID associated with the provided username
-            databaseReference.orderByChild("username").equalTo(username)
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            // Loop through the results to find the user ID
-                            for (snapshot in dataSnapshot.children) {
-                                val userId = snapshot.key
+                        // Get the username passed from SignUpActivity
+                        val username = intent.getStringExtra("username")
 
-                                // Update additionalData in the database
-                                userId?.let {
-                                    databaseReference.child(it).child("additionalData").setValue(additionalData)
-                                        .addOnSuccessListener {
-                                            Toast.makeText(
-                                                this@InmateSignUpActivity,
-                                                "Data saved successfully",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            // Redirect to appropriate page based on user type
-                                            // (If needed, add your logic here)
-                                            startActivity(Intent(this@InmateSignUpActivity, SignInActivity::class.java))
-                                            finish()
+                        // Query the database to find the user ID associated with the provided username
+                        databaseReference.orderByChild("username").equalTo(username)
+                            .addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                    if (dataSnapshot.exists()) {
+                                        // Loop through the results to find the user ID
+                                        for (snapshot in dataSnapshot.children) {
+                                            val userId = snapshot.key
+
+                                            // Update additionalData in the database
+                                            userId?.let {
+                                                databaseReference.child(it).child("additionalData").setValue(additionalData)
+                                                    .addOnSuccessListener {
+                                                        Toast.makeText(
+                                                            this@InmateSignUpActivity,
+                                                            "Data saved successfully",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                        // Redirect to appropriate page based on user type
+                                                        // (If needed, add your logic here)
+                                                        startActivity(Intent(this@InmateSignUpActivity, SignInActivity::class.java))
+                                                        finish()
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        Toast.makeText(
+                                                            this@InmateSignUpActivity,
+                                                            "Failed to save data: ${e.message}",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                            }
                                         }
-                                        .addOnFailureListener { e ->
-                                            Toast.makeText(
-                                                this@InmateSignUpActivity,
-                                                "Failed to save data: ${e.message}",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
+                                    } else {
+                                        Toast.makeText(
+                                            this@InmateSignUpActivity,
+                                            "User not found",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 }
-                            }
-                        } else {
-                            Toast.makeText(
-                                this@InmateSignUpActivity,
-                                "User not found",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
 
-                    override fun onCancelled(databaseError: DatabaseError) {
+                                override fun onCancelled(databaseError: DatabaseError) {
+                                    Toast.makeText(
+                                        this@InmateSignUpActivity,
+                                        "Database Error: ${databaseError.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            })
+                    }.addOnFailureListener { e ->
                         Toast.makeText(
                             this@InmateSignUpActivity,
-                            "Database Error: ${databaseError.message}",
+                            "Failed to get image URL: ${e.message}",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
-                })
+                }.addOnFailureListener { e ->
+                    Toast.makeText(
+                        this@InmateSignUpActivity,
+                        "Failed to upload image: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+        } ?: run {
+            Toast.makeText(
+                this@InmateSignUpActivity,
+                "No image selected",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
+
 
     companion object {
         const val REQUEST_IMAGE_PICK = 1
