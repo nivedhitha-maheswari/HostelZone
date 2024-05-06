@@ -65,6 +65,7 @@ class SignInActivity : AppCompatActivity() {
 
                         if (user != null && user.password == password) {
                             sharedPreferences.edit().putString("userId", userId).apply()
+
                             sharedPreferences.edit().putString("userType", user.userType).apply()
 
                             Toast.makeText(this@SignInActivity, "Logged in Successfully", Toast.LENGTH_SHORT).show()

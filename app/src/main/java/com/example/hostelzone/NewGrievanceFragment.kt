@@ -49,10 +49,15 @@ class NewGrievanceFragment : Fragment() {
                     // Proceed with fetching user data and submitting the grievance
                     fetchUserDataAndSubmitGrievance(userId, grievance)
                 } else {
-                    Toast.makeText(requireContext(), "User ID not found in SharedPreferences", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "User ID not found in SharedPreferences",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             } else {
-                Toast.makeText(requireContext(), "Please enter a grievance", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Please enter a grievance", Toast.LENGTH_SHORT)
+                    .show()
             }
         }
     }
@@ -67,15 +72,97 @@ class NewGrievanceFragment : Fragment() {
                 // Check if user data exists
                 if (dataSnapshot.exists()) {
                     // Retrieve roll number from user data
-                    val rollNumber = dataSnapshot.child("additionalData").child("rollNumber").getValue(String::class.java)
+                    val rollNumber = dataSnapshot.child("additionalData").child("rollNumber")
+                        .getValue(String::class.java)
+                    Toast.makeText(requireContext(), "Roll NUmber ${rollNumber}", Toast.LENGTH_SHORT).show()
+
                     if (!rollNumber.isNullOrEmpty()) {
                         // Proceed with submitting the grievance
-                        submitGrievance(userId, rollNumber, grievance)
+                        submitGrievance(userId,rollNumber, grievance)
                     } else {
-                        Toast.makeText(requireContext(), "Roll number not found for the user", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            requireContext(),
+                            "Roll number not found for the user",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
-                    Toast.makeText(requireContext(), "User data not found in the database", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "User data not found in the database",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Toast.makeText(
+                    requireContext(),
+                    "Error fetching user data: ${databaseError.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
+    }
+
+   private fun submitGrievance(userId: String,rollNumber: String, grievance: String) {
+        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val sdfTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        val currentDate: String = sdfDate.format(Date())
+        val currentTime: String = sdfTime.format(Date())
+
+        // Retrieve degree, course, year, and group from the user data
+        val userReference = FirebaseDatabase.getInstance().reference.child("users").child(userId)
+        userReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val degree = dataSnapshot.child("additionalData").child("degree").getValue(String::class.java)
+                val course = dataSnapshot.child("additionalData").child("course").getValue(String::class.java)
+                val year = dataSnapshot.child("additionalData").child("year").getValue(String::class.java)
+                val group = dataSnapshot.child("additionalData").child("group").getValue(String::class.java)
+
+                if (degree != null && course != null && year != null && group != null) {
+                    val grievanceId = databaseReference
+                        .child("grievances")
+                        .child(degree)
+                        .child(course)
+                        .child(year)
+                        .child(group)
+                        .push()
+                        .key
+
+                    val grievanceData = mapOf(
+                        "grievanceId" to grievanceId,
+                        "rollNumber" to rollNumber,
+                        "date" to currentDate,
+                        "time" to currentTime,
+                        "grievance" to grievance,
+                        "status" to "submitted"
+                    )
+
+                    grievanceId?.let {
+                        databaseReference
+                            .child("grievances")
+                            .child(degree)
+                            .child(course)
+                            .child(year)
+                            .child(group)
+                            .child(it)
+                            .setValue(grievanceData)
+                            .addOnSuccessListener {
+                                Toast.makeText(requireContext(), "Grievance submitted successfully", Toast.LENGTH_SHORT).show()
+                                // Replace the current fragment with GrievancesFragment
+                                val fragmentManager = requireActivity().supportFragmentManager
+                                val fragmentTransaction = fragmentManager.beginTransaction()
+                                val newFragment = GrievancesFragment()
+                                fragmentTransaction.replace(R.id.fragment_container, newFragment)
+                                fragmentTransaction.commit()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(requireContext(), "Failed to submit grievance", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Incomplete user data", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -83,39 +170,5 @@ class NewGrievanceFragment : Fragment() {
                 Toast.makeText(requireContext(), "Error fetching user data: ${databaseError.message}", Toast.LENGTH_SHORT).show()
             }
         })
-    }
-
-    private fun submitGrievance(userId: String, rollNumber: String, grievance: String) {
-        // Proceed with submitting the grievance
-        val grievanceId = databaseReference.child("grievances").push().key
-        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val sdfTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        val currentDate: String = sdfDate.format(Date())
-        val currentTime: String = sdfTime.format(Date())
-
-        val grievanceData = mapOf(
-            "userId" to userId,
-            "rollNumber" to rollNumber,
-            "date" to currentDate,
-            "time" to currentTime,
-            "grievance" to grievance,
-            "status" to "submitted"
-        )
-
-        grievanceId?.let {
-            databaseReference.child("grievances").child(it).setValue(grievanceData)
-                .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Grievance submitted successfully", Toast.LENGTH_SHORT).show()
-                    // Replace the current fragment with a new fragment
-                    val fragmentManager = requireActivity().supportFragmentManager
-                    val fragmentTransaction = fragmentManager.beginTransaction()
-                    val newFragment = GrievancesFragment() // Replace with your new fragment class
-                    fragmentTransaction.replace(R.id.fragment_container, newFragment)
-                    fragmentTransaction.commit()
-                }
-                .addOnFailureListener {
-                    Toast.makeText(requireContext(), "Failed to submit grievance", Toast.LENGTH_SHORT).show()
-                }
-        }
     }
 }

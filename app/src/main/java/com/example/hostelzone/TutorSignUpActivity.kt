@@ -4,7 +4,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
-import android.util.Base64
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.Toast
@@ -21,7 +20,6 @@ class TutorSignUpActivity : AppCompatActivity() {
     private lateinit var databaseReference: DatabaseReference
     private var selectedImageBitmap: Bitmap? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTutorSignUpBinding.inflate(layoutInflater)
@@ -31,9 +29,8 @@ class TutorSignUpActivity : AppCompatActivity() {
 
         binding.btnChooseImage.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-            startActivityForResult(intent, InmateSignUpActivity.REQUEST_IMAGE_PICK)
+            startActivityForResult(intent, REQUEST_IMAGE_PICK)
         }
-
 
         // Set up the spinner with options
         val tutoringClassAdapter = ArrayAdapter.createFromResource(
@@ -44,23 +41,21 @@ class TutorSignUpActivity : AppCompatActivity() {
         tutoringClassAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerTutoringClass.adapter = tutoringClassAdapter
 
-
         // Handle sign-up button click
-
         binding.buttonSignUp.setOnClickListener {
             uploadImageToFirebase()
         }
     }
 
-        override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-            super.onActivityResult(requestCode, resultCode, data)
-            if (requestCode == InmateSignUpActivity.REQUEST_IMAGE_PICK && resultCode == RESULT_OK && data != null) {
-                val imageUri = data.data
-                selectedImageBitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
-                binding.tutorImageView.setImageBitmap(selectedImageBitmap)
-                binding.tutorImageView.visibility = ImageView.VISIBLE
-            }
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_IMAGE_PICK && resultCode == RESULT_OK && data != null) {
+            val imageUri = data.data
+            selectedImageBitmap = MediaStore.Images.Media.getBitmap(contentResolver, imageUri)
+            binding.tutorImageView.setImageBitmap(selectedImageBitmap)
+            binding.tutorImageView.visibility = ImageView.VISIBLE
         }
+    }
 
     private fun uploadImageToFirebase() {
         selectedImageBitmap?.let { bitmap ->
@@ -170,5 +165,8 @@ class TutorSignUpActivity : AppCompatActivity() {
             ).show()
         }
     }
-}
 
+    companion object {
+        const val REQUEST_IMAGE_PICK = 1
+    }
+}

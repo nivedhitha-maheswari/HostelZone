@@ -15,10 +15,7 @@
         <activity
             android:name=".TutorBottomNavigation"
             android:exported="false" />
-        <activity
-            android:name=".nav"
-            android:exported="false"
-            android:label="@string/title_activity_nav" />
+
         <activity
             android:name=".BottomNavigation"
             android:exported="false" />
@@ -28,32 +25,14 @@
         <activity
             android:name=".TutorSignUpActivity"
             android:exported="false" />
-        <activity
-            android:name=".WardenSignUpActivity"
-            android:exported="false"
-            android:label="@string/title_activity_warden_sign_up"
-            android:theme="@style/Theme.LoginAndSignUp" />
-        <activity
-            android:name=".SupervisorSignUpActivity"
-            android:exported="false" />
+
         <activity
             android:name=".InmateSignUpActivity"
             android:exported="false" />
         <activity
             android:name=".SignUpActivity"
             android:exported="false" />
-        <activity
-            android:name=".ListItemPendingActivity"
-            android:exported="false" />
-        <activity
-            android:name=".InmateHomeActivity"
-            android:exported="false" />
-        <activity
-            android:name=".TutorHomeActivity"
-            android:exported="false" />
-        <activity
-            android:name=".SupervisorHomeActivity"
-            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -66,6 +45,8 @@
         <activity
             android:name=".SignInActivity"
             android:exported="true" />
+
     </application>
+    <uses-permission android:name="android.permission.INTERNET" />
 
 </manifest>

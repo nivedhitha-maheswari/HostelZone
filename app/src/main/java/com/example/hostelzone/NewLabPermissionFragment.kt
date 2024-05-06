@@ -16,7 +16,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class NewLabPermissionFragment : Fragment() {
-
     private lateinit var databaseReference: DatabaseReference
     private lateinit var sharedPreferences: SharedPreferences
 
@@ -32,7 +31,7 @@ class NewLabPermissionFragment : Fragment() {
         val numberPickerAmPm: NumberPicker = view.findViewById(R.id.numberPickerAmPm)
 
         // Initialize NumberPickers for hours, minutes, and AM/PM
-        initPicker(0, 12, numberPickerHours)
+        initPicker(6, 12, numberPickerHours)
         initPicker(0, 59, numberPickerMinutes)
         initPickerWithString(0, 0, numberPickerAmPm, arrayOf("PM"))
 
@@ -51,73 +50,142 @@ class NewLabPermissionFragment : Fragment() {
             val userId = sharedPreferences.getString("userId", "")
 
             if (!userId.isNullOrEmpty()) {
-                // Retrieve reason and comments from EditText fields
-                val reasonEditText = view.findViewById<EditText>(R.id.reasonEditText)
-                val commentsEditText = view.findViewById<EditText>(R.id.commentsEditText)
-                val reason = reasonEditText.text.toString().trim()
-                val comments = commentsEditText.text.toString().trim()
-
-                // Get the selected hour and minute from NumberPicker
-                val selectedHour = numberPickerHours.value
-                val selectedMinute = numberPickerMinutes.value
-
-                // Create a Calendar instance and set the selected hour and minute
-                val calendar = Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, selectedHour)
-                    set(Calendar.MINUTE, selectedMinute)
-                }
-
-                // Format the requested time as HH:mm:ss
-                val requestedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)
-
-                // Get the current system time
-                val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-
-                // Get the current date
-                val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
-                // Fetch user details from Firebase Database
-                fetchUserdetails(userId) { userData ->
-                    if (userData != null) {
-                        // Create a map for the request data including all user details
-                        val requestData = mapOf(
-                            "reason" to reason,
-                            "comments" to comments,
-                            "requestedTime" to requestedTime,
-                            "currentTime" to currentTime,
-                            "currentDate" to currentDate,
-                            "facultyId" to "dummyFacultyId", // Replace with actual faculty ID
-                            "rollNumber" to userData.rollNumber,
-                            "course" to userData.course,
-                            "year" to userData.year,
-                            "group" to userData.group,
-                            "status" to "submitted" // Add the status field with the value "submitted"
-                        )
-
-                        // Add the request data to the "requests" subcollection at the root level
-                        databaseReference.child("requests").push()
-                            .setValue(requestData)
-                            .addOnSuccessListener {
-                                Toast.makeText(requireContext(), "Permission requested successfully", Toast.LENGTH_SHORT).show()
-                                // Replace the current fragment with LabPermissionFragment
-                                val labPermissionFragment = LabPermissionFragment()
-                                requireActivity().supportFragmentManager.beginTransaction()
-                                    .replace(R.id.fragment_container, labPermissionFragment)
-                                    .commit()
-                            }
-                            .addOnFailureListener {
-                                Toast.makeText(requireContext(), "Failed to request permission", Toast.LENGTH_SHORT).show()
-                            }
-                    } else {
-                        Toast.makeText(requireContext(), "User details not found", Toast.LENGTH_SHORT).show()
-                    }
-                }
+                // Fetch user data and then store the request
+                fetchUserDataAndStoreRequest(userId)
             } else {
                 Toast.makeText(requireContext(), "User ID not found in SharedPreferences", Toast.LENGTH_SHORT).show()
             }
         }
 
         return view
+    }
+
+    private fun fetchUserDataAndStoreRequest(userId: String) {
+        // Construct database reference to the user node
+        val userReference = FirebaseDatabase.getInstance().reference.child("users").child(userId)
+
+        // Retrieve user data
+        userReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                // Check if the dataSnapshot has the "additionalData" node
+                val additionalDataSnapshot = dataSnapshot.child("additionalData")
+                if (additionalDataSnapshot.exists()) {
+                    // Retrieve degree, course, year, and group from additionalData node
+                    val degree = additionalDataSnapshot.child("degree").getValue(String::class.java)
+                    val course = additionalDataSnapshot.child("course").getValue(String::class.java)
+                    val year = additionalDataSnapshot.child("year").getValue(String::class.java)
+                    val group = additionalDataSnapshot.child("group").getValue(String::class.java)
+
+                    // Display received degree, course, year, and group values in toast messages
+                    Toast.makeText(requireContext(), "Received Degree: $degree", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Received Course: $course", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Received Year: $year", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Received Group: $group", Toast.LENGTH_SHORT).show()
+
+                    // If any of the required data is missing, show an error message
+                    if (degree.isNullOrEmpty() || course.isNullOrEmpty() || year.isNullOrEmpty() || group.isNullOrEmpty()) {
+                        Toast.makeText(requireContext(), "User data incomplete", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+
+                    // Proceed with storing the request using the fetched data
+                    storeRequest(userId,degree, course, year, group)
+                } else {
+                    // Show an error message if the "additionalData" node doesn't exist
+                    Toast.makeText(requireContext(), "Additional data not found", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Handle onCancelled
+            }
+        })
+
+    }
+
+    private fun storeRequest(userId: String, degree: String, course: String, year: String, group: String) {
+        // Retrieve reason and comments from EditText fields
+        val reasonEditText = view?.findViewById<EditText>(R.id.reasonEditText)
+        val commentsEditText = view?.findViewById<EditText>(R.id.commentsEditText)
+        val reason = reasonEditText?.text.toString().trim()
+        val comments = commentsEditText?.text.toString().trim()
+
+        // Get the selected hour and minute from NumberPicker
+        val selectedHour = view?.findViewById<NumberPicker>(R.id.numberPickerHours)?.value
+        val selectedMinute = view?.findViewById<NumberPicker>(R.id.numberPickerMinutes)?.value
+
+        // Create a Calendar instance and set the selected hour and minute
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, selectedHour ?: 0)
+            set(Calendar.MINUTE, selectedMinute ?: 0)
+        }
+
+        // Format the requested time as HH:mm:ss
+        val requestedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.time)
+
+        // Get the current system time
+        val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+
+        // Get the current date
+        val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        // Construct database reference to the user node
+        val userReference = FirebaseDatabase.getInstance().reference.child("users").child(userId)
+
+        // Retrieve user data including roll number
+        userReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                // Retrieve roll number from user data
+                val rollNumber = dataSnapshot.child("additionalData").child("rollNumber").getValue(String::class.java)
+
+                if (!rollNumber.isNullOrEmpty()) {
+                    // Generate a unique ID for the lab permission
+                    val labPermissionId = databaseReference.push().key
+
+                    // Create a map for the request data including the labPermissionId and other fields
+                    val requestData = mapOf(
+                        "labPermissionId" to labPermissionId,
+                        "reason" to reason,
+                        "comments" to comments,
+                        "requestedTime" to requestedTime,
+                        "currentTime" to currentTime,
+                        "currentDate" to currentDate,
+                        "facultyId" to "dummyFacultyId", // Replace with actual faculty ID
+                        "rollNumber" to rollNumber,
+                        "status" to "submitted" // Add the status field with the value "submitted"
+                    )
+
+                    // Add the request data to the appropriate location in the database
+                    val requestRef = databaseReference
+                        .child("requests")
+                        .child(degree)
+                        .child(course)
+                        .child(year)
+                        .child(group)
+
+                    // Add the request data along with the labPermissionId as a child node
+                    requestRef.child(labPermissionId ?: "")
+                        .setValue(requestData)
+                        .addOnSuccessListener {
+                            Toast.makeText(requireContext(), "Permission requested successfully", Toast.LENGTH_SHORT).show()
+                            // Replace the current fragment with LabPermissionFragment
+                            val labPermissionFragment = LabPermissionFragment()
+                            requireActivity().supportFragmentManager.beginTransaction()
+                                .replace(R.id.fragment_container, labPermissionFragment)
+                                .commit()
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(requireContext(), "Failed to request permission", Toast.LENGTH_SHORT).show()
+                        }
+                } else {
+                    Toast.makeText(requireContext(), "Roll number not found", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Handle onCancelled
+            }
+        })
     }
 
     private fun initPicker(min: Int, max: Int, p: NumberPicker) {
@@ -131,45 +199,4 @@ class NewLabPermissionFragment : Fragment() {
         p.maxValue = max
         p.displayedValues = str
     }
-
-    data class UserData(
-        val rollNumber: String?,
-        val course: String?,
-        val year: String?,
-        val group: String?
-    )
-
-    private fun fetchUserdetails(userId: String, callback: (UserData?) -> Unit) {
-        // Construct database reference to the user node
-        val userReference = FirebaseDatabase.getInstance().reference.child("users").child(userId)
-
-        // Retrieve user data
-        userReference.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                // Check if user data exists
-                if (dataSnapshot.exists()) {
-                    // Retrieve user details from dataSnapshot
-                    val rollNumber = dataSnapshot.child("additionalData").child("rollNumber").getValue(String::class.java)
-                    val course = dataSnapshot.child("additionalData").child("course").getValue(String::class.java)
-                    val year = dataSnapshot.child("additionalData").child("year").getValue(String::class.java)
-                    val group = dataSnapshot.child("additionalData").child("group").getValue(String::class.java)
-
-                    // Create a UserData object with retrieved details
-                    val userData = UserData(rollNumber, course, year, group)
-
-                    // Pass the userData object to the callback function
-                    callback(userData)
-                } else {
-                    // If user data doesn't exist, pass null to the callback function
-                    callback(null)
-                }
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                // If data retrieval is cancelled, pass null to the callback function
-                callback(null)
-            }
-        })
-    }
-
 }

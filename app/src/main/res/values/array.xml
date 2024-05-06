@@ -25,8 +25,16 @@
         <item>Q</item>
     </string-array>
 
-    <string-array name="class_options">
+    <string-array name="degree_options">
+        <item>BE</item>
         <item>MCA</item>
+        <item>MSc</item>
+        <item>ME</item>
+
+    </string-array>
+
+    <string-array name="class_options">
+        <item>ComputerApplication</item>
         <item>Mechanical</item>
         <item>Civil</item>
         <item>IT</item>
@@ -34,5 +42,33 @@
         <item>Production</item>
     </string-array>
 
+    <string-array name="be_options">
+        <item>ComputerApplication</item>
+        <item>CS</item>
+        <item>Civil</item>
+        <item>EEE</item>
+        <item>ECE</item>
+        <item>Mechanical</item>
+    </string-array>
+
+    <string-array name="mca_options">
+        <item>ComputerApplication</item>
+
+    </string-array>
+
+    <string-array name="me_options">
+        <item>Biotechnology</item>
+        <item>CyberSecurity</item>
+        <item>Information Technology</item>
+        <item>VLSI</item>
+    </string-array>
+
+    <string-array name="msc_options">
+        <item>Applied Mathematics</item>
+        <item>CyberSecurity</item>
+        <item>Data Science</item>
+        <item>Software Systems</item>
+        <item>Theoretical CS</item>
+    </string-array>
 
 </resources>

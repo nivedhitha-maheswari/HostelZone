@@ -6,11 +6,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.google.firebase.database.DataSnapshot
 import com.example.hostelzone.databinding.FragmentRequestListBinding
 import com.google.firebase.database.*
 
@@ -90,9 +93,12 @@ class RequestListFragment : Fragment() {
                             val reason = requestSnapshot.child("reason").value.toString()
                             val requestedTime = requestSnapshot.child("requestedTime").value.toString()
                             val requestedDate = requestSnapshot.child("currentDate").value.toString()
-
                             val requestStatus = requestSnapshot.child("status").value.toString()
-                            val request = Request(requestId, rollNumber, reason,requestedDate,requestedTime, requestStatus)
+
+                            // Retrieve image URL from additionalData subcollection
+                            val imageUrl = requestSnapshot.child("additionalData").child("imageUrl").getValue(String::class.java)
+
+                            val request = Request(requestId, rollNumber, reason, requestedDate, requestedTime, requestStatus, imageUrl)
                             requests.add(request)
                         }
                     }
@@ -113,7 +119,7 @@ class RequestListFragment : Fragment() {
         _binding = null
     }
 
-    data class Request(val requestId: String, val rollNumber: String, val reason: String,val currentDate: String, val requestedTime: String,val requestStatus: String)
+    data class Request(val requestId: String, val rollNumber: String, val reason: String, val currentDate: String, val requestedTime: String, val requestStatus: String, val imageUrl: String?)
 
     inner class RequestAdapter : RecyclerView.Adapter<RequestAdapter.RequestViewHolder>() {
         private var requests: List<Request> = emptyList()
@@ -144,14 +150,30 @@ class RequestListFragment : Fragment() {
                 val timeText = "${request.requestedTime}"
                 val statusText = " ${request.requestStatus} "
 
-                itemView.findViewById<TextView>(R.id.textViewrequestRollNumber).text = rollnumberText
-                itemView.findViewById<TextView>(R.id.textViewrequestReason).text = reasonText
-                itemView.findViewById<TextView>(R.id.textviewRequestedTime).text = timeText
+                itemView.findViewById<TextView>(R.id.textViewrequestRollNumber)?.text = rollnumberText
+                itemView.findViewById<TextView>(R.id.textViewrequestReason)?.text = reasonText
+                itemView.findViewById<TextView>(R.id.textviewRequestedTime)?.text = timeText
+                itemView.findViewById<TextView>(R.id.textviewRequestedDate)?.text = dateText
 
-                itemView.findViewById<TextView>(R.id.textviewRequestedDate).text = dateText
-                itemView.findViewById<TextView>(R.id.textViewrequestStatus).text = statusText
+                val statusTextView = itemView.findViewById<TextView>(R.id.textViewrequestStatus)
+                statusTextView?.text = statusText
+
+                // Check for null before setting background
+                val backgroundResId = when (request.requestStatus) {
+                    "forwarded" -> R.drawable.green_background
+                    "declined" -> R.drawable.red_background
+                    else -> R.drawable.rounded_corner_background // You can create a default background XML as well
+                }
+                statusTextView?.setBackgroundResource(backgroundResId)
+
+                // Load image into ImageView using Glide
+                request.imageUrl?.let { imageUrl ->
+                    val imageView = itemView.findViewById<ImageView>(R.id.imageViewProfile)
+                    Glide.with(itemView.context)
+                        .load(imageUrl)
+                        .into(imageView)
+                }
             }
-
         }
     }
 }

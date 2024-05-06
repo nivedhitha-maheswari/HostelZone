@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:gravity="start"
         android:padding="6dp"
-        android:text=" New Pending Requests "
+        android:text=" Requests Lists "
         android:textColor="@color/brown"
         android:textSize="20sp"
         android:textStyle="bold"

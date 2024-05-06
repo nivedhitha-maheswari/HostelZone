@@ -4,6 +4,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.View
+import android.widget.AdapterView
 import android.widget.Toast
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
@@ -58,6 +60,27 @@ class InmateSignUpActivity : AppCompatActivity() {
         blockAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerBlock.adapter = blockAdapter
 
+        // Set up the degree spinner with options
+        val degreeAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.degree_options,
+            android.R.layout.simple_spinner_item
+        )
+        degreeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerDegree.adapter = degreeAdapter
+
+        // Handle degree spinner item selection
+        binding.spinnerDegree.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val selectedDegree = parent?.getItemAtPosition(position).toString()
+                setCourseSpinnerAdapter(selectedDegree)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Do nothing
+            }
+        }
+
         // Handle sign-up button click
         binding.buttonSignUp.setOnClickListener {
             uploadImageToFirebase()
@@ -72,6 +95,24 @@ class InmateSignUpActivity : AppCompatActivity() {
             binding.imageView.setImageBitmap(selectedImageBitmap)
             binding.imageView.visibility = ImageView.VISIBLE
         }
+    }
+
+    private fun setCourseSpinnerAdapter(selectedDegree: String) {
+        val courseOptionsArrayId = when (selectedDegree) {
+            "BE" -> R.array.be_options
+            "MCA" -> R.array.mca_options
+            "MSc" -> R.array.msc_options
+            "ME" -> R.array.me_options
+            else -> R.array.class_options // Default to class_options array
+        }
+
+        val courseAdapter = ArrayAdapter.createFromResource(
+            this,
+            courseOptionsArrayId,
+            android.R.layout.simple_spinner_item
+        )
+        courseAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerClass.adapter = courseAdapter
     }
 
     private fun uploadImageToFirebase() {
@@ -95,6 +136,7 @@ class InmateSignUpActivity : AppCompatActivity() {
                             "inmateName" to binding.editTextInmateName.text.toString(),
                             "rollNumber" to binding.editTextRollNumber.text.toString(),
                             "course" to binding.spinnerClass.selectedItem.toString(),
+                            "degree" to binding.spinnerDegree.selectedItem.toString(),
                             "year" to binding.spinnerYear.selectedItem.toString(),
                             "group" to binding.groupSpinner.selectedItem.toString(),
                             "block" to binding.spinnerBlock.selectedItem.toString(),
@@ -177,7 +219,6 @@ class InmateSignUpActivity : AppCompatActivity() {
             ).show()
         }
     }
-
 
     companion object {
         const val REQUEST_IMAGE_PICK = 1

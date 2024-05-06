@@ -7,11 +7,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.example.hostelzone.databinding.FragmentTutorPendingRequestBinding
 import com.google.firebase.database.*
 
@@ -24,6 +26,7 @@ class TutorPendingRequestFragment : Fragment() {
     private lateinit var adapter: RequestAdapter
     private lateinit var databaseReference: DatabaseReference
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var tutorUserId: String
 
     companion object {
         private const val TAG = "TutorPendingRequestFragment"
@@ -45,9 +48,10 @@ class TutorPendingRequestFragment : Fragment() {
         recyclerView.adapter = adapter
 
         sharedPreferences = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
-        val userId = sharedPreferences.getString("userId", "")
-        if (!userId.isNullOrEmpty()) {
-            fetchTutoringClassFromFirebase(userId)
+        tutorUserId = sharedPreferences.getString("userId", "") ?: ""
+
+        if (tutorUserId.isNotEmpty()) {
+            fetchTutoringClassFromFirebase(tutorUserId)
         } else {
             Toast.makeText(requireContext(), "User ID not found in SharedPreferences", Toast.LENGTH_SHORT).show()
         }
@@ -64,6 +68,8 @@ class TutorPendingRequestFragment : Fragment() {
 
                 if (!tutoringClass.isNullOrEmpty() && !tutoringClassGroup.isNullOrEmpty() && !tutoringClassYear.isNullOrEmpty()) {
                     fetchRequests(tutoringClass, tutoringClassGroup, tutoringClassYear)
+                    Toast.makeText(requireContext(), "Tutoring class information found for the user", Toast.LENGTH_SHORT).show()
+
                 } else {
                     Toast.makeText(requireContext(), "Tutoring class information not found for the user", Toast.LENGTH_SHORT).show()
                 }
@@ -83,19 +89,28 @@ class TutorPendingRequestFragment : Fragment() {
                 if (snapshot.exists()) {
                     for (requestSnapshot in snapshot.children) {
                         val requestId = requestSnapshot.key ?: ""
-                        val course = requestSnapshot.child("course").value.toString()
-                        val year = requestSnapshot.child("year").value.toString()
-                        val group = requestSnapshot.child("group").value.toString()
-                        val status = requestSnapshot.child("status").value.toString()
-                        if (course == tutoringClass && year == tutoringClassYear && group == tutoringClassGroup && status == "submitted") {
-                            val rollNumber = requestSnapshot.child("rollNumber").value.toString()
-                            val reason = requestSnapshot.child("reason").value.toString()
-                            val requestedTime = requestSnapshot.child("requestedTime").value.toString()
-                            val request = Request(requestId, rollNumber, reason, requestedTime)
-                            requests.add(request)
+                        val rollNumber = requestSnapshot.child("rollNumber").value.toString()
+
+                        fetchUserDetails(rollNumber) { userData ->
+                            userData?.let {
+                                val course = userData.course
+                                val year = userData.year
+                                val group = userData.group
+
+                                if (course == tutoringClass && year == tutoringClassYear && group == tutoringClassGroup) {
+                                    val reason = requestSnapshot.child("reason").value.toString()
+                                    val requestedTime = requestSnapshot.child("requestedTime").value.toString()
+
+                                    val imageUrl = requestSnapshot.child("additionalData").child("image").getValue(String::class.java)
+
+                                    val request = Request(requestId, rollNumber, reason, requestedTime, imageUrl)
+                                    requests.add(request)
+                                }
+                            }
                         }
                     }
                     adapter.setRequests(requests)
+                    Toast.makeText(requireContext(), "Fetched ${requests.size} requests for tutoring class: $tutoringClass", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(requireContext(), "No requests found for tutoring class: $tutoringClass", Toast.LENGTH_SHORT).show()
                 }
@@ -107,12 +122,33 @@ class TutorPendingRequestFragment : Fragment() {
         })
     }
 
+
+    private fun fetchUserDetails(rollNumber: String, callback: (UserData?) -> Unit) {
+        val userReference = FirebaseDatabase.getInstance().reference.child("users").orderByChild("rollNumber").equalTo(rollNumber)
+        userReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    for (userSnapshot in snapshot.children) {
+                        val userData = userSnapshot.getValue(UserData::class.java)
+                        callback(userData)
+                        return
+                    }
+                }
+                callback(null)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(requireContext(), "Error fetching user details: ${error.message}", Toast.LENGTH_SHORT).show()
+                callback(null)
+            }
+        })
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
-    data class Request(val requestId: String, val rollNumber: String, val reason: String, val requestedTime: String)
+    data class Request(val requestId: String, val rollNumber: String, val reason: String, val requestedTime: String, val imageUrl: String?)
 
     inner class RequestAdapter : RecyclerView.Adapter<RequestAdapter.RequestViewHolder>() {
         private var requests: MutableList<Request> = mutableListOf()
@@ -149,33 +185,31 @@ class TutorPendingRequestFragment : Fragment() {
                 itemView.findViewById<TextView>(R.id.textViewrequestReason).text = request.reason
                 itemView.findViewById<TextView>(R.id.textviewRequestedTime).text = request.requestedTime
 
+                // Load image into ImageView using Glide
+                request.imageUrl?.let { imageUrl ->
+                    val imageView = itemView.findViewById<ImageView>(R.id.imageViewProfile)
+                    Glide.with(itemView.context)
+                        .load(imageUrl)
+                        .into(imageView)
+                }
+
                 val forwardButton = itemView.findViewById<Button>(R.id.forwardRequestButton)
                 val rejectButton = itemView.findViewById<Button>(R.id.rejectRequestButton)
 
                 forwardButton.setOnClickListener {
                     updateRequestStatus(requestId, "forwarded")
-                    // Reload the page after button click
                     reloadPage()
                 }
 
                 rejectButton.setOnClickListener {
                     updateRequestStatus(requestId, "declined")
-                    // Reload the page after button click
                     reloadPage()
                 }
             }
 
             private fun reloadPage() {
-                // Clear the existing list and fetch data again to refresh the page
                 clearRequests()
-                // Fetch data again to refresh the page
-                sharedPreferences = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
-                val userId = sharedPreferences.getString("userId", "")
-                if (!userId.isNullOrEmpty()) {
-                    fetchTutoringClassFromFirebase(userId)
-                } else {
-                    Toast.makeText(requireContext(), "User ID not found in SharedPreferences", Toast.LENGTH_SHORT).show()
-                }
+                fetchTutoringClassFromFirebase(tutorUserId)
             }
 
             private fun updateRequestStatus(requestId: String, newStatus: String) {
@@ -202,4 +236,15 @@ class TutorPendingRequestFragment : Fragment() {
             }
         }
     }
+
+    data class UserData(
+        val course: String = "",
+        val year: String = "",
+        val group: String = "",
+        val imageUrl: String? = null
+    ) {
+        // No-argument constructor required by Firebase
+        constructor() : this("", "", "", null)
+    }
+
 }

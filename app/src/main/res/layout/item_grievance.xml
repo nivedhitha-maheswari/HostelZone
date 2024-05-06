@@ -1,108 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_marginBottom="6dp"
     android:layout_marginLeft="10dp"
-    android:layout_marginRight="10dp">
+    android:layout_marginRight="10dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
 
-   <LinearLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-       android:padding="14dp"
-       android:id="@+id/layout"
-       android:layout_marginBottom="8dp"
-       android:background="@drawable/item_background">
-<!--        android:padding="12dp"-->
-<!--        android:background="@drawable/item_background_2">-->
+        android:padding="14dp"
+        android:id="@+id/layout"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/item_background">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="2dp">
-
-        <TextView
-            android:id="@+id/textViewGrievanceLabel"
-            android:layout_width="wrap_content"
-            android:textSize="16sp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Grievance: "
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            />
+            android:orientation="horizontal"
+            android:padding="2dp">
 
-        <TextView
-            android:id="@+id/textViewGrievance"
-            android:layout_width="0dp"
+            <TextView
+                android:id="@+id/textViewGrievanceLabel"
+                android:layout_width="wrap_content"
+                android:textSize="16sp"
+                android:layout_height="wrap_content"
+                android:text="Grievance: "
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/textViewGrievance"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:layout_weight="1"
+                android:textColor="@color/yellow"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:layout_weight="1"
-            android:textColor="@color/yellow"
-            android:textStyle="bold"/>
+            android:orientation="horizontal"
+            android:padding="2dp">
+            <TextView
+                android:id="@+id/textViewDateLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Submitted Date: "
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
+            <TextView
+                android:id="@+id/textViewDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/yellow"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="2dp">
+            <TextView
+                android:id="@+id/textViewStatusLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Status: "
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textViewStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="3dp"
+                android:textColor="@color/white"
+                android:background="@drawable/rounded_corner_background"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
     </LinearLayout>
 
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="2dp">
-<TextView
-android:id="@+id/textViewDateLabel"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:text="Submitted Date: "
-android:textColor="@color/black"
-android:textSize="16sp"
-android:textStyle="bold"/>
-
-    <!-- TextView for Grievance Date -->
-<TextView
-android:id="@+id/textViewDate"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:textColor="@color/yellow"
-android:textSize="16sp"
-    android:textStyle="bold"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="2dp">
-
-
-    <!-- Grievance Status Label -->
-<TextView
-android:id="@+id/textViewStatusLabel"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:text="Status: "
-android:textColor="@color/black"
-android:textSize="16sp"
-android:textStyle="bold"/>
-
-    <!-- TextView for Grievance Status -->
-        <TextView
-            android:id="@+id/textViewStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="3dp"
-            android:textColor="@color/white"
-            android:background="@drawable/rounded_corner_background"
-            android:textSize="16sp"
-            android:textStyle="bold"/>
-
-    </LinearLayout>
-
-
-
-</LinearLayout>
-
-</LinearLayout>
-
+</androidx.cardview.widget.CardView>
