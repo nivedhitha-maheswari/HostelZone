@@ -10,7 +10,11 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.NumberPicker
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.database.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -18,6 +22,8 @@ import java.util.*
 class NewLabPermissionFragment : Fragment() {
     private lateinit var databaseReference: DatabaseReference
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,11 +44,26 @@ class NewLabPermissionFragment : Fragment() {
         // Initialize Firebase Database reference
         databaseReference = FirebaseDatabase.getInstance().reference
 
-        // Find the "Request Permission" button
-        val requestPermissionButton = view.findViewById<Button>(R.id.requestPermissionButton)
+        // Initialize FusedLocationProviderClient
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
 
         // Initialize SharedPreferences
         sharedPreferences = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
+
+        // Initialize requestPermissionLauncher in onViewCreated
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permission is granted, proceed with location-related operations
+                // In this case, fetching and storing location
+                // Call fetchAndStoreLocation() here
+            } else {
+                // Permission is denied, handle the scenario appropriately
+                Toast.makeText(requireContext(), "Location permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Find the "Request Permission" button
+        val requestPermissionButton = view.findViewById<Button>(R.id.requestPermissionButton)
 
         // Handle click event of the "Request Permission" button
         requestPermissionButton.setOnClickListener {
@@ -76,12 +97,6 @@ class NewLabPermissionFragment : Fragment() {
                     val year = additionalDataSnapshot.child("year").getValue(String::class.java)
                     val group = additionalDataSnapshot.child("group").getValue(String::class.java)
 
-                    // Display received degree, course, year, and group values in toast messages
-                    Toast.makeText(requireContext(), "Received Degree: $degree", Toast.LENGTH_SHORT).show()
-                    Toast.makeText(requireContext(), "Received Course: $course", Toast.LENGTH_SHORT).show()
-                    Toast.makeText(requireContext(), "Received Year: $year", Toast.LENGTH_SHORT).show()
-                    Toast.makeText(requireContext(), "Received Group: $group", Toast.LENGTH_SHORT).show()
-
                     // If any of the required data is missing, show an error message
                     if (degree.isNullOrEmpty() || course.isNullOrEmpty() || year.isNullOrEmpty() || group.isNullOrEmpty()) {
                         Toast.makeText(requireContext(), "User data incomplete", Toast.LENGTH_SHORT).show()
@@ -89,7 +104,7 @@ class NewLabPermissionFragment : Fragment() {
                     }
 
                     // Proceed with storing the request using the fetched data
-                    storeRequest(userId,degree, course, year, group)
+                    storeRequest(userId, degree, course, year, group)
                 } else {
                     // Show an error message if the "additionalData" node doesn't exist
                     Toast.makeText(requireContext(), "Additional data not found", Toast.LENGTH_SHORT).show()
@@ -100,7 +115,6 @@ class NewLabPermissionFragment : Fragment() {
                 // Handle onCancelled
             }
         })
-
     }
 
     private fun storeRequest(userId: String, degree: String, course: String, year: String, group: String) {
@@ -137,6 +151,7 @@ class NewLabPermissionFragment : Fragment() {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 // Retrieve roll number from user data
                 val rollNumber = dataSnapshot.child("additionalData").child("rollNumber").getValue(String::class.java)
+                val imageUrl = dataSnapshot.child("additionalData").child("image").getValue(String::class.java)
 
                 if (!rollNumber.isNullOrEmpty()) {
                     // Generate a unique ID for the lab permission
@@ -152,16 +167,17 @@ class NewLabPermissionFragment : Fragment() {
                         "currentDate" to currentDate,
                         "facultyId" to "dummyFacultyId", // Replace with actual faculty ID
                         "rollNumber" to rollNumber,
+                        "imageUrl" to imageUrl,
                         "status" to "submitted" // Add the status field with the value "submitted"
                     )
 
                     // Add the request data to the appropriate location in the database
                     val requestRef = databaseReference
                         .child("requests")
-                        .child(degree)
-                        .child(course)
-                        .child(year)
-                        .child(group)
+                        .child(degree ?: "")
+                        .child(course ?: "")
+                        .child(year ?: "")
+                        .child(group ?: "")
 
                     // Add the request data along with the labPermissionId as a child node
                     requestRef.child(labPermissionId ?: "")

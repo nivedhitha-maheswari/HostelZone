@@ -39,7 +39,16 @@ class TutorSignUpActivity : AppCompatActivity() {
             android.R.layout.simple_spinner_item
         )
         tutoringClassAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerTutoringClass.adapter = tutoringClassAdapter
+        binding.spinnerClass.adapter = tutoringClassAdapter
+
+        // Set up the spinner for degree
+        val degreeAdapter = ArrayAdapter.createFromResource(
+            this,
+            R.array.degree_options,
+            android.R.layout.simple_spinner_item
+        )
+        degreeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerDegree.adapter = degreeAdapter
 
         // Handle sign-up button click
         binding.buttonSignUp.setOnClickListener {
@@ -65,9 +74,10 @@ class TutorSignUpActivity : AppCompatActivity() {
 
             val tutorName = binding.editTextTutorName.text.toString()
             val facultyId = binding.editTextFacultyId.text.toString()
-            val tutoringClass = binding.spinnerTutoringClass.selectedItem.toString()
-            val tutoringClassYear = binding.spinnerTutoringClassYear.selectedItem.toString()
-            val tutoringClassGroup = binding.spinnerTutoringClassGroup.selectedItem.toString()
+            val tutoringClass = binding.spinnerClass.selectedItem.toString()
+            val tutoringDegree = binding.spinnerDegree.selectedItem.toString()
+            val tutoringClassYear = binding.spinnerYear.selectedItem.toString()
+            val tutoringClassGroup = binding.groupSpinner.selectedItem.toString()
             val mobileNumber = binding.editTextMobileNumber.text.toString()
 
             // Firebase Storage reference
@@ -85,6 +95,7 @@ class TutorSignUpActivity : AppCompatActivity() {
                             "tutorName" to tutorName,
                             "facultyId" to facultyId,
                             "tutoringClass" to tutoringClass,
+                            "tutoringDegree" to tutoringDegree,
                             "tutoringClassYear" to tutoringClassYear,
                             "tutoringClassGroup" to tutoringClassGroup,
                             "mobileNumber" to mobileNumber,

@@ -32,7 +32,7 @@
         android:layout_marginTop="16dp"/>
 
     <Spinner
-        android:id="@+id/spinnerTutoringClass"
+        android:id="@+id/spinnerDegree"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -44,7 +44,7 @@
         android:entries="@array/class_options" />
 
     <Spinner
-        android:id="@+id/spinnerTutoringClassYear"
+        android:id="@+id/spinnerClass"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -52,11 +52,11 @@
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinnerTutoringClass"
-        android:entries="@array/year_options" />
+        app:layout_constraintTop_toBottomOf="@+id/spinnerDegree"
+        android:entries="@array/class_options" />
 
     <Spinner
-        android:id="@+id/spinnerTutoringClassGroup"
+        android:id="@+id/spinnerYear"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -64,9 +64,23 @@
         android:layout_marginEnd="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/spinnerTutoringClassYear"
-        android:entries="@array/groups" />
-
+        app:layout_constraintTop_toBottomOf="@+id/spinnerClass"
+        android:entries="@array/year_options" />
+    <Spinner
+        android:id="@+id/groupSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="24dp"
+        android:padding="8dp"
+        android:background="@drawable/border_background"
+        android:spinnerMode="dropdown"
+        android:entries="@array/groups"
+        android:dropDownWidth="match_parent"
+        app:layout_constraintTop_toBottomOf="@+id/spinnerYear"
+        android:popupBackground="@color/yellow"
+        android:popupElevation="8dp"
+        android:popupTheme="@style/LoginTextInputInnerFieldStyle"/>
 
 
     <EditText
@@ -76,7 +90,7 @@
         android:hint="Mobile Number"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/spinnerTutoringClassGroup"
+        app:layout_constraintTop_toBottomOf="@id/groupSpinner"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginTop="16dp"/>
@@ -107,7 +121,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="112dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="16dp"
         android:text="Sign up"
         android:textColor="@color/black"

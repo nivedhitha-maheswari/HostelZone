@@ -27,6 +27,10 @@ class TutorPendingRequestFragment : Fragment() {
     private lateinit var databaseReference: DatabaseReference
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var tutorUserId: String
+    private lateinit var tutoringDegree: String
+    private lateinit var tutoringClass: String
+    private lateinit var tutoringClassYear: String
+    private lateinit var tutoringClassGroup: String
 
     companion object {
         private const val TAG = "TutorPendingRequestFragment"
@@ -55,19 +59,20 @@ class TutorPendingRequestFragment : Fragment() {
         } else {
             Toast.makeText(requireContext(), "User ID not found in SharedPreferences", Toast.LENGTH_SHORT).show()
         }
-        databaseReference = FirebaseDatabase.getInstance().reference.child("requests")
+        databaseReference = FirebaseDatabase.getInstance().reference
     }
 
     private fun fetchTutoringClassFromFirebase(userId: String) {
         val userReference = FirebaseDatabase.getInstance().reference.child("users").child(userId)
         userReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val tutoringClass = dataSnapshot.child("additionalData").child("tutoringClass").getValue(String::class.java)
-                val tutoringClassGroup = dataSnapshot.child("additionalData").child("tutoringClassGroup").getValue(String::class.java)
-                val tutoringClassYear = dataSnapshot.child("additionalData").child("tutoringClassYear").getValue(String::class.java)
+                tutoringDegree = dataSnapshot.child("additionalData").child("tutoringDegree").getValue(String::class.java) ?: ""
+                tutoringClass = dataSnapshot.child("additionalData").child("tutoringClass").getValue(String::class.java) ?: ""
+                tutoringClassGroup = dataSnapshot.child("additionalData").child("tutoringClassGroup").getValue(String::class.java) ?: ""
+                tutoringClassYear = dataSnapshot.child("additionalData").child("tutoringClassYear").getValue(String::class.java) ?: ""
 
-                if (!tutoringClass.isNullOrEmpty() && !tutoringClassGroup.isNullOrEmpty() && !tutoringClassYear.isNullOrEmpty()) {
-                    fetchRequests(tutoringClass, tutoringClassGroup, tutoringClassYear)
+                if (tutoringDegree.isNotEmpty() && tutoringClass.isNotEmpty() && tutoringClassGroup.isNotEmpty() && tutoringClassYear.isNotEmpty()) {
+                    fetchRequests(tutoringDegree, tutoringClass, tutoringClassGroup, tutoringClassYear)
                     Toast.makeText(requireContext(), "Tutoring class information found for the user", Toast.LENGTH_SHORT).show()
 
                 } else {
@@ -81,39 +86,34 @@ class TutorPendingRequestFragment : Fragment() {
         })
     }
 
-    private fun fetchRequests(tutoringClass: String, tutoringClassGroup: String, tutoringClassYear: String) {
-        val query = databaseReference.orderByChild("course").equalTo(tutoringClass)
-        query.addListenerForSingleValueEvent(object : ValueEventListener {
+    private fun fetchRequests(tutoringDegree: String, tutoringClass: String, tutoringClassGroup: String, tutoringClassYear: String) {
+        val requestRef = databaseReference
+            .child("requests")
+            .child(tutoringDegree)
+            .child(tutoringClass)
+            .child(tutoringClassYear)
+            .child(tutoringClassGroup)
+
+        requestRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val requests = mutableListOf<Request>()
-                if (snapshot.exists()) {
-                    for (requestSnapshot in snapshot.children) {
-                        val requestId = requestSnapshot.key ?: ""
-                        val rollNumber = requestSnapshot.child("rollNumber").value.toString()
 
-                        fetchUserDetails(rollNumber) { userData ->
-                            userData?.let {
-                                val course = userData.course
-                                val year = userData.year
-                                val group = userData.group
+                for (requestSnapshot in snapshot.children) {
+                    val requestId = requestSnapshot.key ?: ""
+                    val reason = requestSnapshot.child("reason").value.toString()
+                    val requestedTime = requestSnapshot.child("requestedTime").value.toString()
+                    val rollNumber = requestSnapshot.child("rollNumber").value.toString()
+                    val imageUrl = requestSnapshot.child("imageUrl").value.toString()
+                    val status = requestSnapshot.child("status").value.toString()
 
-                                if (course == tutoringClass && year == tutoringClassYear && group == tutoringClassGroup) {
-                                    val reason = requestSnapshot.child("reason").value.toString()
-                                    val requestedTime = requestSnapshot.child("requestedTime").value.toString()
-
-                                    val imageUrl = requestSnapshot.child("additionalData").child("image").getValue(String::class.java)
-
-                                    val request = Request(requestId, rollNumber, reason, requestedTime, imageUrl)
-                                    requests.add(request)
-                                }
-                            }
-                        }
+                    if (status == "submitted") {
+                        val request =
+                            Request(requestId, rollNumber, reason, requestedTime, imageUrl)
+                        requests.add(request)
                     }
-                    adapter.setRequests(requests)
-                    Toast.makeText(requireContext(), "Fetched ${requests.size} requests for tutoring class: $tutoringClass", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(requireContext(), "No requests found for tutoring class: $tutoringClass", Toast.LENGTH_SHORT).show()
                 }
+
+                adapter.setRequests(requests)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -122,27 +122,31 @@ class TutorPendingRequestFragment : Fragment() {
         })
     }
 
-
-    private fun fetchUserDetails(rollNumber: String, callback: (UserData?) -> Unit) {
+    private fun fetchUserDetails(rollNumber: String, callback: (String?) -> Unit) {
         val userReference = FirebaseDatabase.getInstance().reference.child("users").orderByChild("rollNumber").equalTo(rollNumber)
         userReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     for (userSnapshot in snapshot.children) {
-                        val userData = userSnapshot.getValue(UserData::class.java)
-                        callback(userData)
-                        return
+                        val additionalData = userSnapshot.child("additionalData")
+                        val imageUrlSnapshot = additionalData.child("imageUrl")
+                        if (imageUrlSnapshot.exists()) {
+                            val imageUrl = imageUrlSnapshot.getValue(String::class.java)
+                            callback(imageUrl)
+                            return
+                        }
                     }
                 }
-                callback(null)
+                callback(null) // If user with given rollNumber not found or imageUrl not available
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(requireContext(), "Error fetching user details: ${error.message}", Toast.LENGTH_SHORT).show()
+                // Handle onCancelled
                 callback(null)
             }
         })
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -154,8 +158,9 @@ class TutorPendingRequestFragment : Fragment() {
         private var requests: MutableList<Request> = mutableListOf()
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RequestViewHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_tutor_new_request_list, parent, false)
-            return RequestViewHolder(view)
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_tutor_new_request_list, parent, false)
+            return RequestViewHolder(view, tutoringDegree, tutoringClass, tutoringClassYear, tutoringClassGroup)
         }
 
         override fun onBindViewHolder(holder: RequestViewHolder, position: Int) {
@@ -177,34 +182,52 @@ class TutorPendingRequestFragment : Fragment() {
             notifyDataSetChanged()
         }
 
-        inner class RequestViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            fun bind(request: Request) {
-                val requestId = request.requestId
-
-                itemView.findViewById<TextView>(R.id.textViewrequestRollNumber).text = request.rollNumber
-                itemView.findViewById<TextView>(R.id.textViewrequestReason).text = request.reason
-                itemView.findViewById<TextView>(R.id.textviewRequestedTime).text = request.requestedTime
-
-                // Load image into ImageView using Glide
-                request.imageUrl?.let { imageUrl ->
-                    val imageView = itemView.findViewById<ImageView>(R.id.imageViewProfile)
-                    Glide.with(itemView.context)
-                        .load(imageUrl)
-                        .into(imageView)
-                }
-
+        inner class RequestViewHolder(itemView: View, val tutoringDegree: String, val tutoringClass: String, val tutoringClassYear: String, val tutoringClassGroup: String) : RecyclerView.ViewHolder(itemView) {
+            init {
+                // Find the forward request and reject buttons
                 val forwardButton = itemView.findViewById<Button>(R.id.forwardRequestButton)
                 val rejectButton = itemView.findViewById<Button>(R.id.rejectRequestButton)
 
+                // Set click listeners for the buttons
                 forwardButton.setOnClickListener {
-                    updateRequestStatus(requestId, "forwarded")
+                    val requestId = requests[adapterPosition].requestId
+
+                    val requestRef = databaseReference
+                        .child("requests")
+                        .child(tutoringDegree)
+                        .child(tutoringClass)
+                        .child(tutoringClassYear)
+                        .child(tutoringClassGroup)
+                    updateRequestStatus(requestId,requestRef, "forwarded")
                     reloadPage()
                 }
 
                 rejectButton.setOnClickListener {
-                    updateRequestStatus(requestId, "declined")
+                    val requestId = requests[adapterPosition].requestId
+                    val requestRef = databaseReference
+                        .child("requests")
+                        .child(tutoringDegree)
+                        .child(tutoringClass)
+                        .child(tutoringClassYear)
+                        .child(tutoringClassGroup)
+                    updateRequestStatus(requestId, requestRef, "declined")
                     reloadPage()
                 }
+            }
+
+            fun bind(request: Request) {
+                val requestId = request.requestId
+                itemView.findViewById<TextView>(R.id.textViewrequestRollNumber).text =
+                    request.rollNumber
+                itemView.findViewById<TextView>(R.id.textViewrequestReason).text = request.reason
+                itemView.findViewById<TextView>(R.id.textviewRequestedTime).text =
+                    request.requestedTime
+
+                // Load image into ImageView using Glide
+                val imageView = itemView.findViewById<ImageView>(R.id.imageViewProfile)
+                Glide.with(itemView.context)
+                    .load(request.imageUrl)
+                    .into(imageView)
             }
 
             private fun reloadPage() {
@@ -212,28 +235,27 @@ class TutorPendingRequestFragment : Fragment() {
                 fetchTutoringClassFromFirebase(tutorUserId)
             }
 
-            private fun updateRequestStatus(requestId: String, newStatus: String) {
-                val requestRef = databaseReference.child(requestId)
-                requestRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        if (dataSnapshot.exists()) {
-                            requestRef.child("status").setValue(newStatus)
-                                .addOnSuccessListener {
-                                    Toast.makeText(itemView.context, "Request $newStatus successfully", Toast.LENGTH_SHORT).show()
-                                }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(itemView.context, "Failed to update status: ${e.message}", Toast.LENGTH_SHORT).show()
-                                }
-                        } else {
-                            Toast.makeText(itemView.context, "Request $requestId not found", Toast.LENGTH_SHORT).show()
-                        }
+            private fun updateRequestStatus(requestId: String, requestRef: DatabaseReference, newStatus: String) {
+                val statusUpdate = mapOf("status" to newStatus)
+                requestRef.child(requestId).updateChildren(statusUpdate)
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            itemView.context,
+                            "Request $newStatus ",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        reloadPage()
                     }
-
-                    override fun onCancelled(databaseError: DatabaseError) {
-                        Toast.makeText(itemView.context, "Error updating status: ${databaseError.message}", Toast.LENGTH_SHORT).show()
+                    .addOnFailureListener { e ->
+                        Toast.makeText(
+                            itemView.context,
+                            "Failed to update status: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        reloadPage()
                     }
-                })
             }
+
         }
     }
 
@@ -246,5 +268,4 @@ class TutorPendingRequestFragment : Fragment() {
         // No-argument constructor required by Firebase
         constructor() : this("", "", "", null)
     }
-
 }
