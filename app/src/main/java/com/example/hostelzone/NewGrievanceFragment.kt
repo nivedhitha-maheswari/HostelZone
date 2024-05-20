@@ -74,7 +74,6 @@ class NewGrievanceFragment : Fragment() {
                     // Retrieve roll number from user data
                     val rollNumber = dataSnapshot.child("additionalData").child("rollNumber")
                         .getValue(String::class.java)
-                    Toast.makeText(requireContext(), "Roll NUmber ${rollNumber}", Toast.LENGTH_SHORT).show()
 
                     if (!rollNumber.isNullOrEmpty()) {
                         // Proceed with submitting the grievance
@@ -136,7 +135,7 @@ class NewGrievanceFragment : Fragment() {
                         "date" to currentDate,
                         "time" to currentTime,
                         "grievance" to grievance,
-                        "status" to "submitted"
+                        "status" to "pending"
                     )
 
                     grievanceId?.let {

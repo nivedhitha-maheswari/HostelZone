@@ -6,8 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".LabPermissionFragment">
 
-
-
     <RelativeLayout
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -23,12 +21,18 @@
             android:layout_height="85dp"
             android:layout_alignParentTop="true"
             tools:ignore="MissingConstraints" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout_editor_absoluteX="0dp"
+            android:layout_below="@id/topExcludedArea"
+
+            tools:layout_editor_absoluteY="-127dp">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_below="@id/topExcludedArea"
-
             android:background="@drawable/item_background"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp">
@@ -106,12 +110,10 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Timing label -->
 
 
         </LinearLayout>
 
-        <!-- Reason -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/reasonLayout"
             style="@style/LoginTextInputOuterFieldStyle"
@@ -135,48 +137,85 @@
                 android:maxLines="5" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Additional Comments -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/commentsLayout"
-            style="@style/LoginTextInputOuterFieldStyle"
-            android:layout_width="300dp"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/reasonLayout"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="16dp"
-            app:boxStrokeColor="@color/yellow"
-            app:hintTextColor="@color/yellow">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/commentsEditText"
-                style="@style/LoginTextInputInnerFieldStyle"
-                android:layout_width="match_parent"
+
+            <Button
+                android:id="@+id/getCameraButton"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:hint="Additional Comments"
-                android:inputType="textMultiLine"
-                android:minLines="3"
-                android:maxLines="5" />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_gravity="center"
+                android:text="Take Photo"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.767"
+                tools:ignore="MissingConstraints" />
 
-        <!-- Request Permission Button -->
+            <ImageView
+                android:id="@+id/photoImageView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                app:layout_constraintBottom_toTopOf="@id/getLocationButton"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="10dp"
+                android:adjustViewBounds="true"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/topExcludedArea" />
+
+
+            <Button
+                android:id="@+id/getLocationButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Get Location"
+                android:layout_marginTop="20dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.767"
+                tools:ignore="MissingConstraints" />
+
+            <TextView
+                android:id="@+id/locationTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/getLocationButton"
+                android:layout_gravity="center"
+                android:alpha="0.8"
+                android:padding="16dp"
+                android:background="#FFFFFF"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.498"
+                tools:ignore="MissingConstraints"/>
+
         <Button
             android:id="@+id/requestPermissionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/yellow"
             android:text="Request Permission"
-            android:layout_below="@id/commentsLayout"
+            android:layout_below="@id/locationTextView"
             android:layout_gravity="center"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="2dp" />
+
             <View
                 android:id="@+id/bottomExcludedArea"
                 android:layout_width="match_parent"
-                android:layout_height="45dp"
+                android:layout_height="65dp"
                 android:layout_alignParentTop="true"
                 tools:ignore="MissingConstraints" />
     </LinearLayout>
 
+        </ScrollView>
     </RelativeLayout>
 
 

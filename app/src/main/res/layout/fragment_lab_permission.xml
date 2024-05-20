@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+
     <View
         android:id="@+id/topExcludedArea"
         android:layout_width="0dp"

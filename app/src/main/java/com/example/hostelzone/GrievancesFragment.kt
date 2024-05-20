@@ -122,7 +122,6 @@ class GrievancesFragment : Fragment() {
         })
     }
 
-    @SuppressLint("RestrictedApi")
     private fun fetchGrievancesByRollNumber(
         rollNumber: String,
         degree: String,
@@ -137,23 +136,57 @@ class GrievancesFragment : Fragment() {
             .child(year)
             .child(group)
 
+        // Query only the grievances associated with the given roll number
+        val query = grievanceRef.orderByChild("rollNumber").equalTo(rollNumber)
 
-
-        // Fetch all grievances under the specified group
-        grievanceRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 val grievances = mutableListOf<Grievance>()
 
                 for (grievanceSnapshot in dataSnapshot.children) {
-                    val grievance = grievanceSnapshot.getValue(Grievance::class.java)
-                    grievance?.let {
-                        // Filter grievances by roll number
-                        if (it.rollNumber == rollNumber) {
-                            grievances.add(it)
+                    // Check if the entry is a placeholder or a complete grievance
+                    if (grievanceSnapshot.hasChild("placeholderKey")) {
+                        val placeHolderKey =
+                            grievanceSnapshot.child("placeholderKey").getValue(String::class.java)
+                        val placeHolderValue =
+                            grievanceSnapshot.child("placeholderValue").getValue(String::class.java)
+
+                        if (!placeHolderKey.isNullOrEmpty() && !placeHolderValue.isNullOrEmpty()) {
+
+                            val newGrievance = Grievance(
+                                grievanceId = "",
+                                rollNumber = rollNumber,
+                                status = "",
+                                time = "",
+                                placeHolderKey = placeHolderKey ?: "",
+                                placeHolderValue = placeHolderValue ?: ""
+                            )
+                            grievances.add(newGrievance)
+                        }
+                    } else {
+                        val grievanceId = grievanceSnapshot.child("grievanceId").getValue(String::class.java)
+                        val rollNumber = grievanceSnapshot.child("rollNumber").getValue(String::class.java)
+                        val status = grievanceSnapshot.child("status").getValue(String::class.java)
+                        val time = grievanceSnapshot.child("time").getValue(String::class.java)
+                        val date = grievanceSnapshot.child("date").getValue(String::class.java)
+                        val grievance = grievanceSnapshot.child("grievance").getValue(String::class.java)
+                        // Skip adding if any required field is null
+                        if (!grievanceId.isNullOrEmpty() && !rollNumber.isNullOrEmpty() &&
+                            !status.isNullOrEmpty() && !time.isNullOrEmpty() && !date.isNullOrEmpty() &&
+                            !grievance.isNullOrEmpty()
+                        ) {
+                            val newGrievance = Grievance(
+                                grievanceId = grievanceId,
+                                rollNumber = rollNumber,
+                                status = status,
+                                time = time,
+                                date = date,
+                                grievance = grievance
+                            )
+                            grievances.add(newGrievance)
                         }
                     }
                 }
-
                 // Update the adapter with fetched grievances
                 grievancesAdapter.submitList(grievances)
             }
@@ -161,7 +194,6 @@ class GrievancesFragment : Fragment() {
             override fun onCancelled(databaseError: DatabaseError) {
                 // Handle error
                 Log.e(TAG, "Error fetching data: ${databaseError.message}")
-                // Display a message to the user
                 Toast.makeText(
                     requireContext(),
                     "Error fetching data: ${databaseError.message}",
@@ -180,9 +212,11 @@ class GrievancesFragment : Fragment() {
         val grievanceId: String = "", // Unique ID for the grievance
         val grievance: String ="",
         val rollNumber: String = "", // Roll number of the user raising the grievance
-        val reason: String = "", // Reason for the grievance
+        val time: String = "", // Reason for the grievance
         val date: String = "", // Date of the grievance
-        val status: String = "" // Status of the grievance
+        val status: String = "", // Status of the grievance
+        var placeHolderKey: String = "",
+        var placeHolderValue: String = ""
     )
 
     class GrievanceAdapter :

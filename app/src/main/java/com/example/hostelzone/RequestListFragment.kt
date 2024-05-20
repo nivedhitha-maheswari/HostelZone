@@ -72,8 +72,6 @@ class RequestListFragment : Fragment() {
 
                 if (tutoringDegree.isNotEmpty() && tutoringClass.isNotEmpty() && tutoringClassGroup.isNotEmpty() && tutoringClassYear.isNotEmpty()) {
                     fetchRequests(tutoringDegree, tutoringClass, tutoringClassGroup, tutoringClassYear)
-                    Toast.makeText(requireContext(), "Tutoring class information found for the user", Toast.LENGTH_SHORT).show()
-
                 } else {
                     Toast.makeText(requireContext(), "Tutoring class information not found for the user", Toast.LENGTH_SHORT).show()
                 }

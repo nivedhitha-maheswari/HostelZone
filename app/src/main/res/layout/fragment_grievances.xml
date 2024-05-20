@@ -37,13 +37,7 @@
         app:layout_constraintBottom_toTopOf="@+id/bottomExcludedArea"
         app:layout_constraintTop_toBottomOf="@+id/textViewList" />
 
-    <View
-        android:id="@+id/bottomExcludedArea"
-        android:layout_width="0dp"
-        android:layout_height="52dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabNewGrievance"
@@ -55,5 +49,12 @@
         app:layout_constraintBottom_toTopOf="@id/bottomExcludedArea"
         app:layout_constraintEnd_toEndOf="parent"
         app:backgroundTint="@color/brown" />
+    <View
+        android:id="@+id/bottomExcludedArea"
+        android:layout_width="0dp"
+        android:layout_height="52dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

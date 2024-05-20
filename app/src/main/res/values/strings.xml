@@ -9,6 +9,9 @@
     <string name="title_home">Title Home</string>
     <string name="title_notifications">Title Notification</string>
     <string name="title_activity_nav">nav</string>
+    <string name="title_activity_forgot_password">ForgotPassword</string>
+    <string name="title_activity_forgot_password_fragment">ForgotPasswordFragment</string>
+    <string name="title_activity_change_password">ChangePasswordActivity</string>
 
 
 </resources>

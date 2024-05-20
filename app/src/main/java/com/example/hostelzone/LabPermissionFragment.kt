@@ -18,10 +18,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.database.*
 
 class LabPermissionFragment : Fragment() {
-
     private var _binding: FragmentLabPermissionBinding? = null
     private val binding get() = _binding!!
-
     private lateinit var recyclerView: RecyclerView
     private lateinit var labPermissionAdapter: LabPermissionAdapter
     private lateinit var databaseReference: DatabaseReference
@@ -41,20 +39,13 @@ class LabPermissionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // Initialize RecyclerView and its adapter
         recyclerView = binding.recyclerViewRequests
         labPermissionAdapter = LabPermissionAdapter()
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = labPermissionAdapter
-
-        // Initialize SharedPreferences
         sharedPreferences = requireContext().getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
-
-        // Fetch userId from SharedPreferences
         val userId = sharedPreferences.getString("userId", "")
         if (!userId.isNullOrEmpty()) {
-            // Fetch roll number, degree, course, year, and group from Firebase using userId
             fetchUserDataFromFirebase(userId)
         } else {
             Toast.makeText(
@@ -63,59 +54,32 @@ class LabPermissionFragment : Fragment() {
                 Toast.LENGTH_SHORT
             ).show()
         }
-
-        // Initialize Firebase components
         databaseReference = FirebaseDatabase.getInstance().reference
         val fabNewLabPermission = view.findViewById<FloatingActionButton>(R.id.fabNewRequest)
         fabNewLabPermission.setOnClickListener {
-            // Create a new instance of the NewLabPermissionFragment
             val newFragment = NewLabPermissionFragment()
-            // Get the FragmentManager
             val fragmentManager = requireActivity().supportFragmentManager
-            // Begin a new transaction
             val fragmentTransaction = fragmentManager.beginTransaction()
-            // Replace the current fragment with the new one
             fragmentTransaction.replace(R.id.fragment_container, newFragment)
-            // Add the transaction to the back stack (optional)
             fragmentTransaction.addToBackStack(null)
-            // Commit the transaction
             fragmentTransaction.commit()
         }
-        Toast.makeText(requireContext(), "View created", Toast.LENGTH_SHORT).show()
-
     }
 
     private fun fetchUserDataFromFirebase(userId: String) {
-        // Construct database reference to the user node
         val userReference = FirebaseDatabase.getInstance().reference.child("users").child(userId)
-
-        // Retrieve user data
         userReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val degree = dataSnapshot.child("additionalData").child("degree")
-                    .getValue(String::class.java)
-                val course = dataSnapshot.child("additionalData").child("course")
-                    .getValue(String::class.java)
-                val year =
-                    dataSnapshot.child("additionalData").child("year").getValue(String::class.java)
-                val group =
-                    dataSnapshot.child("additionalData").child("group").getValue(String::class.java)
-                val rollNumber = dataSnapshot.child("additionalData").child("rollNumber")
-                    .getValue(String::class.java)
-
+                val degree = dataSnapshot.child("additionalData").child("degree").getValue(String::class.java)
+                val course = dataSnapshot.child("additionalData").child("course").getValue(String::class.java)
+                val year = dataSnapshot.child("additionalData").child("year").getValue(String::class.java)
+                val group = dataSnapshot.child("additionalData").child("group").getValue(String::class.java)
+                val rollNumber = dataSnapshot.child("additionalData").child("rollNumber").getValue(String::class.java)
                 if (!degree.isNullOrEmpty() && !course.isNullOrEmpty() && !year.isNullOrEmpty() && !group.isNullOrEmpty() && !rollNumber.isNullOrEmpty()) {
-                    // Degree, course, year, group, and roll number are available, fetch lab permissions
                     fetchLabPermissionsByRollNumber(rollNumber, degree, course, year, group)
                 } else {
-                    Toast.makeText(requireContext(), "Incomplete user data", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(requireContext(), "Incomplete user data", Toast.LENGTH_SHORT).show()
                 }
-                val userDataMessage = "Received Degree: $degree\n" +
-                        "Received Course: $course\n" +
-                        "Received Year: $year\n" +
-                        "Received Group: $group\n" +
-                        "Received Roll Number: $rollNumber"
-                Toast.makeText(requireContext(), userDataMessage, Toast.LENGTH_SHORT).show()
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
@@ -142,33 +106,63 @@ class LabPermissionFragment : Fragment() {
             .child(course)
             .child(year)
             .child(group)
+        val query = requestRef.orderByChild("rollNumber").equalTo(rollNumber)
 
-        Toast.makeText(requireContext(), "Request Ref Path: ${requestRef.path}", Toast.LENGTH_SHORT)
-            .show()
 
-        // Fetch all requests under the specified group
-        requestRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val labPermissions = mutableListOf<LabPermission>()
-
+                val requests = mutableListOf<LabPermission>()
                 for (requestSnapshot in dataSnapshot.children) {
-                    val labPermission = requestSnapshot.getValue(LabPermission::class.java)
-                    labPermission?.let {
-                        // Filter requests by roll number
-                        if (it.rollNumber == rollNumber) {
-                            labPermissions.add(it)
+                    if (requestSnapshot.hasChild("placeholderKey")) {
+                        val placeHolderKey =
+                            requestSnapshot.child("placeholderKey").getValue(String::class.java)
+                        val placeHolderValue =
+                            requestSnapshot.child("placeholderValue").getValue(String::class.java)
+                        if (!placeHolderKey.isNullOrEmpty() && !placeHolderValue.isNullOrEmpty()) {
+
+                            val newRequest = LabPermission(
+                                labPermissionId = "",
+                                rollNumber = rollNumber,
+                                status = "",
+                                requestedTime = "",
+                                placeHolderKey = placeHolderKey ?: "",
+                                placeHolderValue = placeHolderValue ?: ""
+                            )
+                            requests.add(newRequest)
+                        }
+                    }else {
+                        val labPermissionId =
+                            requestSnapshot.child("labPermissionId").getValue(String::class.java)
+                        val rollNumber =
+                            requestSnapshot.child("rollNumber").getValue(String::class.java)
+                        val reason = requestSnapshot.child("reason").getValue(String::class.java)
+                        val requestedTime =
+                            requestSnapshot.child("requestedTime").getValue(String::class.java)
+                        val currentTime =
+                            requestSnapshot.child("currentTime").getValue(String::class.java)
+                        val status = requestSnapshot.child("status").getValue(String::class.java)
+
+                        if (!labPermissionId.isNullOrEmpty() && !rollNumber.isNullOrEmpty() &&
+                            !reason.isNullOrEmpty() && !requestedTime.isNullOrEmpty() &&
+                            !currentTime.isNullOrEmpty() && !status.isNullOrEmpty()
+                        ) {
+                            val newRequest = LabPermission(
+                                labPermissionId = labPermissionId ?: "",
+                                rollNumber = rollNumber ?: "",
+                                reason = reason ?: "",
+                                requestedTime = requestedTime ?: "",
+                                currentTime = currentTime ?: "",
+                                status = status ?: ""
+                            )
+                            requests.add(newRequest)
                         }
                     }
                 }
-
-                // Update the adapter with fetched lab permissions
-                labPermissionAdapter.submitList(labPermissions)
+                labPermissionAdapter.submitList(requests)
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
-                // Handle error
                 Log.e(TAG, "Error fetching data: ${databaseError.message}")
-                // Display a message to the user
                 Toast.makeText(
                     requireContext(),
                     "Error fetching data: ${databaseError.message}",
@@ -184,20 +178,22 @@ class LabPermissionFragment : Fragment() {
     }
 
     data class LabPermission(
-        val labPermissionId: String = "", // Unique ID for the lab permission
-        val rollNumber: String = "", // Roll number of the user requesting the lab permission
-        val reason: String = "", // Reason for lab permission request
-        val requestedTime: String = "", // Requested time for lab permission
-        val status: String = "" // Status of lab permission request
+        val labPermissionId: String = "",
+        val rollNumber: String = "",
+        val reason: String = "",
+        val requestedTime: String = "",
+        val currentTime: String = "",
+        val status: String = "",
+        var placeHolderKey: String = "",
+        var placeHolderValue: String = ""
+
     ) {
-        // Override toString() method to provide a meaningful string representation
         override fun toString(): String {
-            return "LabPermission(labPermissionId='$labPermissionId', rollNumber='$rollNumber', reason='$reason', requestedTime='$requestedTime', status='$status')"
+            return "LabPermission(labPermissionId='$labPermissionId', rollNumber='$rollNumber', reason='$reason', requestedTime='$requestedTime',currentTime='$currentTime', status='$status')"
         }
     }
-    class LabPermissionAdapter :
-        RecyclerView.Adapter<LabPermissionAdapter.LabPermissionViewHolder>() {
 
+    class LabPermissionAdapter : RecyclerView.Adapter<LabPermissionAdapter.LabPermissionViewHolder>() {
         private val labPermissionList = mutableListOf<LabPermission>()
 
         fun submitList(newList: List<LabPermission>) {
@@ -207,8 +203,7 @@ class LabPermissionFragment : Fragment() {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LabPermissionViewHolder {
-            val itemView =
-                LayoutInflater.from(parent.context).inflate(R.layout.item_request, parent, false)
+            val itemView = LayoutInflater.from(parent.context).inflate(R.layout.item_request, parent, false)
             return LabPermissionViewHolder(itemView)
         }
 
@@ -229,13 +224,16 @@ class LabPermissionFragment : Fragment() {
                 val timeText = "${labPermission.requestedTime}"
                 itemView.findViewById<TextView>(R.id.textViewTime).text = timeText
 
+                val currentTimeText = "${labPermission.currentTime}"
+                itemView.findViewById<TextView>(R.id.textViewAtTime).text = currentTimeText
+
                 val statusText = " ${labPermission.status} "
                 val statusTextView = itemView.findViewById<TextView>(R.id.textViewStatus)
                 statusTextView.text = statusText
 
                 // Check for null before setting background
                 val backgroundResId = when (labPermission.status) {
-                    "forwarded" -> R.drawable.yellow_background
+                    "forwarded"-> R.drawable.yellow_background
                     "approved" -> R.drawable.green_background
                     "declined" -> R.drawable.red_background
                     else -> R.drawable.rounded_corner_background // You can create a default background XML as well

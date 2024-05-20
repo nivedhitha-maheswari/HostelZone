@@ -31,6 +31,7 @@ class BottomNavigation : AppCompatActivity() {
 
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
+
                 R.id.bottom_home -> {
                     navigateToFragment(HomeFragment())
                     true
@@ -41,6 +42,10 @@ class BottomNavigation : AppCompatActivity() {
                 }
                 R.id.bottom_labpermission -> {
                     navigateToFragment(LabPermissionFragment())
+                    true
+                }
+                R.id.bottom_profile -> {
+                    navigateToFragment(InmateProfileFragment())
                     true
                 }
                 else -> false
@@ -67,6 +72,6 @@ class BottomNavigation : AppCompatActivity() {
         // Navigate to login screen
         val intent = Intent(this, SignInActivity::class.java)
         startActivity(intent)
-        finish() // Finish the current activity to prevent going back to the profile screen
+        finish()
     }
 }

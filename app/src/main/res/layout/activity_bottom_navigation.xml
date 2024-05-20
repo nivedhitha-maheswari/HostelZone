@@ -20,27 +20,25 @@
         tools:layout_editor_absoluteX="-73dp" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="65dp"
-        android:orientation="horizontal"
-        android:gravity="start|center_vertical"
         android:background="@color/yellow"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
+        android:gravity="start|center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="MissingConstraints">
 
         <TextView
             android:id="@+id/hostel_zone_textview"
             android:layout_width="wrap_content"
             android:layout_height="65dp"
-            android:text="HOSTEL ZONE"
-            android:padding="16dp"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@color/white"
             android:layout_gravity="bottom"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp"
+            android:padding="16dp"
+            android:text="HOSTEL ZONE"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <View
             android:layout_width="180dp"
@@ -51,12 +49,12 @@
             android:id="@+id/logout_button"
             android:layout_width="50dp"
             android:layout_height="45dp"
-            android:src="@drawable/iconizer_logout__1_"
-        android:padding="10dp"
-        android:background="@color/background_yellow"
-        android:clickable="true"
-        android:onClick="performLogout"
-        android:layout_marginEnd="10dp" />
+            android:layout_marginEnd="10dp"
+            android:background="@color/background_yellow"
+            android:clickable="true"
+            android:onClick="performLogout"
+            android:padding="10dp"
+            android:src="@drawable/iconizer_logout__1_" />
 
     </LinearLayout>
 
@@ -75,6 +73,7 @@
         app:itemIconSize="40dp"
         app:itemPadding="12dp"
         app:itemActiveIndicatorStyle="@style/App.custon.Indicaor"
-        app:menu="@menu/bottom_menu" />
+        app:menu="@menu/bottom_menu"
+       />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

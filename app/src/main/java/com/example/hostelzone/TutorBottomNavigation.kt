@@ -35,7 +35,7 @@ class TutorBottomNavigation : AppCompatActivity() {
         bottomNavigationView.setOnItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.bottom_home -> {
-                    navigateToFragment(HomeFragment())
+                    navigateToFragment(TutorHomeFragment())
                     true
                 }
                 R.id.bottom_new_request -> {
@@ -44,6 +44,10 @@ class TutorBottomNavigation : AppCompatActivity() {
                 }
                 R.id.bottom_request_list -> {
                     navigateToFragment(RequestListFragment())
+                    true
+                }
+                R.id.bottom_profile -> {
+                    navigateToFragment(TutorProfileFragment())
                     true
                 }
                 else -> false

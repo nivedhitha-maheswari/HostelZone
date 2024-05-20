@@ -20,7 +20,7 @@
         tools:layout_editor_absoluteX="-73dp" />
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="65dp"
         android:orientation="horizontal"
         android:gravity="start|center_vertical"
@@ -74,6 +74,8 @@
         app:itemIconSize="40dp"
         app:itemPadding="12dp"
         app:itemActiveIndicatorStyle="@style/App.custon.Indicaor"
-        app:menu="@menu/tutor_bottom_menu" />
+        app:menu="@menu/tutor_bottom_menu"
+        />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
