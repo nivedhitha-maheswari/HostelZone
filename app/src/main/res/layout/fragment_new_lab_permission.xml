@@ -201,7 +201,7 @@
             android:id="@+id/requestPermissionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:backgroundTint="@color/yellow"
+            android:backgroundTint="@color/green"
             android:text="Request Permission"
             android:layout_below="@id/locationTextView"
             android:layout_gravity="center"
